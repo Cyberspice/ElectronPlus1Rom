@@ -452,10 +452,10 @@ uart_err_event    = 7
 .start_adc_conv_ret
 	rts
 .adc_conv_table
-	equb 4
-	equb 5
-	equb 6
-	equb 7
+	EQUB 4
+	EQUB 5
+	EQUB 6
+	EQUB 7
 
 ; Set / reset UART output bit 0 (RTS)
 
@@ -742,28 +742,28 @@ uart_err_event    = 7
 	jmp set_uart_status_done
 
 .bps_rate_tbl
-	equb &bb  ; 9600
-	equb &00  ; 150
-	equb &33  ; 300
-	equb &44  ; 600
-	equb &66  ; 1200
-	equb &88  ; 2400
-	equb &99  ; 4800
-	equb &bb  ; 9600
-	equb &cc  ; 19200
-	equb &11  ;
-	equb &55  ;
-	equb &aa  ;
+	EQUB &bb  ; 9600
+	EQUB &00  ; 150
+	EQUB &33  ; 300
+	EQUB &44  ; 600
+	EQUB &66  ; 1200
+	EQUB &88  ; 2400
+	EQUB &99  ; 4800
+	EQUB &bb  ; 9600
+	EQUB &cc  ; 19200
+	EQUB &11  ;
+	EQUB &55  ;
+	EQUB &aa  ;
 
 .uart_status_tbl
-	equb &02
-	equb &06
-	equb &82
-	equb &86
-	equb &13
-	equb &93
-	equb &83
-	equb &87
+	EQUB &02
+	EQUB &06
+	EQUB &82
+	EQUB &86
+	EQUB &13
+	EQUB &93
+	EQUB &83
+	EQUB &87
 
 .help_orig
 	tya
@@ -781,11 +781,11 @@ uart_err_event    = 7
 .help_orig_ret
 	jmp return
 .help_orig_str
-	equs "Expansion 1.00"
-	equb 13
-	equs "  ADC/Printer/RS423"
-	equb 13
-	equb 0
+	EQUS "Expansion 1.00"
+	EQUB 13
+	EQUS "  ADC/Printer/RS423"
+	EQUB 13
+	EQUB 0
 
 .L8464
 	jsr reset_uart_mr_a
