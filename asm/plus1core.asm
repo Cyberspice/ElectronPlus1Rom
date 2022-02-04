@@ -1,97 +1,13 @@
 
-; This is a reverse engineering of the Acorn Electron Plus 1 Expansion
-; utility ROM. 
+_NO_BUG_ = 0
 
-; Acorn included the RS423 driver since it made it easier to support 
+; This is a reverse engineering of the Acorn Electron Plus 1 Expansion
+; utility ROM.
+
+; Acorn included the RS423 driver since it made it easier to support
 ; the serial printer and redirection. The chip the driver is written
 ; for is the SCN2681 Dual UART with built in clock generation. It was
-; to be supplied as a cartridge.  
-
-; OS routines
-OSEVEN            = &FFBF
-OSARGS            = &FFDA
-OSASCI            = &FFE3
-OSWRCH            = &FFEE
-OSBYTE            = &FFF4
-
-; OS vectors
-FILEV             = &0212
-INSV              = &022a
-REMV              = &022c
-CNPV              = &022e
-
-; Hardware addresses
-UART_MODE_A       = &FC60  ; RW
-UART_STATUS_A     = &FC61  ; R
-UART_CLOCK_A      = &FC61  ; W
-UART_COMMAND_A    = &FC62  ; W
-UART_RX_REG_A     = &FC63  ; R
-UART_TX_REG_A     = &FC63  ; W
-UART_INPUT_CHG    = &FC64  ; R
-UART_AUX_CONTROL  = &FC64  ; W
-UART_INT_STATUS   = &FC65  ; R
-UART_INT_MASK     = &FC65  ; W
-UART_TIMER_UPPER  = &FC66  ; RW
-UART_TIMER_LOWER  = &FC67  ; RW
-UART_INPUT_PORTS  = &FC6d  ; R
-UART_OUTPUT_PORTS = &FC6d  ; W
-UART_START_COUNT  = &FC6e  ; R
-UART_SET_OUTS     = &FC6e  ; W
-UART_STOP_COUNT   = &FC6f  ; R
-UART_RESET_OUTS   = &FC6f  ; W
-
-ADC               = &FC70
-PRINTER           = &FC71
-ADC_PRT_STATUS    = &FC72
-ROMSTB_LATCH      = &FC73
-
-; Page zero addresses
-osbyte_a          = &ef
-osbyte_x          = &f0
-osbyte_y          = &f1
-cmdline           = &f2
-rom_num           = &f4
-brk_addr_low      = &fd
-brk_addr_high     = &fe
-
-; OSBYTE operations (Value for A)
-ob_set_input      = &02
-ob_set_rx_bps     = &07
-ob_set_tx_bps     = &08
-ob_sel_adc        = &10
-ob_force_adc      = &11
-ob_inc_poll_sem   = &16
-ob_dec_poll_sem   = &17
-ob_romstb_rw      = &6e
-ob_read_adc       = &80
-ob_enter_lang     = &8e
-ob_set_uart_sts   = &9c
-ob_plus1_enable   = &a3
-ob_os_var_start   = &a6
-ob_var_rom_ptable = &a8
-ob_var_rom_itable = &aa
-ob_var_input_src  = &b1
-ob_var_cur_adc_ch = &bc
-ob_var_max_adc_ch = &bd
-ob_var_adv_con_tp = &be
-ob_var_uart_use   = &bf
-ob_var_uart_ctrl  = &c0
-ob_var_uart_irq   = &e8
-ob_var_prnt_dest  = &f5
-ob_var_last_break = &fd
-
-; OSARGS operations (Value for A)
-oa_get_fs_number   = 0
-
-; File system numbers
-file_system_none  = 0
-file_system_rom   = 3
-
-; OS workspace
-uart_evt_flg      = &02c6
-adc_conv_last     = &02f7
-adc_conv_lsb      = &02f8
-adc_conv_msb      = &02fc
+; to be supplied as a cartridge.
 
 ; ROM private space
 uart_0d68         = &0d68
@@ -103,33 +19,28 @@ os_var_start_high = &0d6d
 old_insv_ptr_low  = &0d6e
 old_insv_ptr_high = &0d6f
 
-; Event numbers
-adc_conv_event    = 3
-uart_err_event    = 7
-
-
 	ORG &8000
 
 .start
 	jmp lang
 	jmp service
 
-	EQUB &c0
+	EQUB &c0  ; This should be C2 but the original ROM has it as C0
 	EQUB (copystr - start)
 	EQUB 0
 	EQUS "Electron Expansion"
 	EQUD &7f7f7f7f
-        EQUD &7f7f7f7f
-        EQUD &7f7f7f7f
-        EQUD &7f7f7f7f
-        EQUW &7f7f
+  EQUD &7f7f7f7f
+  EQUD &7f7f7f7f
+  EQUD &7f7f7f7f
+  EQUW &7f7f
 	EQUW &0b0b
 	EQUB 0
 	EQUS "1.00"
 .copystr
 	EQUB 0
 	EQUS "(C)1984 Acorn"
-	EQUB 0	
+	EQUB 0
 
 ; Language entry point
 ;
@@ -139,15 +50,24 @@ uart_err_event    = 7
 .lang
 	ldy #ob_var_rom_itable
 	jsr read_os_var
-	stx &0
-	sty &1
+IF _NO_BUG_
+	stx os_spare_low
+	sty os_spare_high
+ELSE
+  stx &00
+  sty &01
+ENDIF
 	ldx rom_num
 .lang2
 	lda langtbl,x  ; Next ROM to check
 	bmi lang4
 	tax
 	tay
-	lda (&0),y     ; Load ROM type byte
+IF _NO_BUG_
+	lda (os_spare_low),y     ; Load ROM type byte
+ELSE
+  lda (&00),y
+ENDIF
 	rol a          ; x2
 	bpl lang2      ; Not a language, next one.
 	lda #ob_enter_lang
@@ -209,7 +129,7 @@ uart_err_event    = 7
 	EQUW	handle_brk - 1       ; #06 - BRK
 	EQUW	unknown_osbyte - 1   ; #07 - Unrecognised OSBYTE
 	EQUW	return - 1           ; #08 - Unrecognised OSWORD
-	EQUW	help_orig - 1        ; #09 - Help
+	EQUW	help - 1             ; #09 - Help
 	EQUW	return - 1           ; #0a - Claim absolute workspace
 	EQUW	return - 1           ; #0b - NMI released
 	EQUW	return - 1           ; #0c - NMI claim
@@ -577,7 +497,7 @@ uart_err_event    = 7
 
 .force_adc
 	lda #0
-	sta adc_conv_last 
+	sta adc_conv_last
 	ldx osbyte_x
 	jsr start_adc_conv
 	lda #&20
@@ -587,7 +507,7 @@ uart_err_event    = 7
 ; Write the ROMSTB latch that is provided by an Electron cartridge.
 ;
 ; The nROMSTB line goes low when &FC73 is addresses. This writes to that
-; address storing the value writting in the shadow location. It returns 
+; address storing the value writting in the shadow location. It returns
 ; the old value.
 ;
 ; *FX 110, X where X is the latch value
@@ -677,7 +597,7 @@ uart_err_event    = 7
 ; Set the UART status.
 ;
 ; The UART in BBC micros and BBC Masters is a Motorola 6850 however the
-; Electron uses a SCN2681 so this emulates the 6850 status register. 
+; Electron uses a SCN2681 so this emulates the 6850 status register.
 
 .set_uart_status
 	lda #&e3
@@ -765,22 +685,22 @@ uart_err_event    = 7
 	EQUB &83
 	EQUB &87
 
-.help_orig
+.help
 	tya
 	pha
 	ldx #0
-.help_orig_2
-	lda help_orig_str,x
-	beq help_orig_3
+.help_2
+	lda help_str,x
+	beq help_3
 	jsr OSASCI
 	inx
-	jmp help_orig_2
-.help_orig_3
+	jmp help_2
+.help_3
 	pla
 	tay
-.help_orig_ret
+.help_ret
 	jmp return
-.help_orig_str
+.help_str
 	EQUS "Expansion 1.00"
 	EQUB 13
 	EQUS "  ADC/Printer/RS423"
@@ -1032,7 +952,7 @@ uart_err_event    = 7
 
 ; If carry is set then X contains a value to set. If carry is clear
 ; then the value of the address and the following address are returned
-; in X and Y. 
+; in X and Y.
 
 .write_os_var
 	sec
@@ -1069,8 +989,9 @@ uart_err_event    = 7
 
 .halve_uart_err_evt
 	ror uart_evt_flg
-	rts	
+	rts
 
+	ORG &a000
 .end
 
-SAVE "plus1rom.bin", start, end	
+SAVE "plus1rom.bin", start, end
