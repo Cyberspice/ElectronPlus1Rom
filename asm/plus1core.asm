@@ -27,7 +27,9 @@ old_insv_ptr_high = &0d6f
 
 	EQUB &c0  ; This should be C2 but the original ROM has it as C0
 	EQUB (copystr - start)
+.version
 	EQUB 0
+.titlestr
 	EQUS "Electron Expansion"
 	EQUD &7f7f7f7f
   EQUD &7f7f7f7f
@@ -124,7 +126,11 @@ ENDIF
 	EQUW	ws_claim - 1         ; #01 - Absolute workspace claim
 	EQUW	return - 1           ; #02 - Relative private workspace claim
 	EQUW	return - 1           ; #03 - Auto-boot call
+IF _ENHANCED_
+  EQUW  command - 1          ; #04 - Unrecognised * command
+ELSE
 	EQUW	return - 1           ; #04 - Unrecognised * command
+ENDIF
 	EQUW	unknown_int - 1      ; #05 - Unknown interrupt
 	EQUW	handle_brk - 1       ; #06 - BRK
 	EQUW	unknown_osbyte - 1   ; #07 - Unrecognised OSBYTE
@@ -685,6 +691,7 @@ ENDIF
 	EQUB &83
 	EQUB &87
 
+IF _ENHANCED_ = 0
 .help
 	tya
 	pha
@@ -706,6 +713,7 @@ ENDIF
 	EQUS "  ADC/Printer/RS423"
 	EQUB 13
 	EQUB 0
+ENDIF
 
 .L8464
 	jsr reset_uart_mr_a
@@ -991,7 +999,3 @@ ENDIF
 	ror uart_evt_flg
 	rts
 
-	ORG &a000
-.end
-
-SAVE "plus1rom.bin", start, end

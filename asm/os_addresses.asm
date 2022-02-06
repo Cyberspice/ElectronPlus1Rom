@@ -7,6 +7,9 @@ OSASCI            = &FFE3
 OSWRCH            = &FFEE
 OSBYTE            = &FFF4
 
+; Stack
+stack_start       = &0100
+
 ; OS vectors
 FILEV             = &0212
 INSV              = &022a
@@ -29,4 +32,3 @@ file_system_rom   = 3
 
 ; OSARGS operations (Value for A)
 oa_get_fs_number   = 0
-
