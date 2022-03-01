@@ -32,10 +32,10 @@ old_insv_ptr_high = &0d6f
 .titlestr
 	EQUS "Electron Expansion"
 	EQUD &7f7f7f7f
-  EQUD &7f7f7f7f
-  EQUD &7f7f7f7f
-  EQUD &7f7f7f7f
-  EQUW &7f7f
+	EQUD &7f7f7f7f
+	EQUD &7f7f7f7f
+	EQUD &7f7f7f7f
+	EQUW &7f7f
 	EQUW &0b0b
 	EQUB 0
 	EQUS "1.00"
@@ -56,8 +56,8 @@ IF _NO_BUG_
 	stx os_spare_low
 	sty os_spare_high
 ELSE
-  stx &00
-  sty &01
+	stx &00
+	sty &01
 ENDIF
 	ldx rom_num
 .lang2
@@ -68,7 +68,7 @@ ENDIF
 IF _NO_BUG_
 	lda (os_spare_low),y     ; Load ROM type byte
 ELSE
-  lda (&00),y
+	lda (&00),y
 ENDIF
 	rol a          ; x2
 	bpl lang2      ; Not a language, next one.
@@ -127,7 +127,7 @@ ENDIF
 	EQUW	return - 1           ; #02 - Relative private workspace claim
 	EQUW	return - 1           ; #03 - Auto-boot call
 IF _ENHANCED_
-  EQUW  command - 1          ; #04 - Unrecognised * command
+	EQUW	command - 1          ; #04 - Unrecognised * command
 ELSE
 	EQUW	return - 1           ; #04 - Unrecognised * command
 ENDIF

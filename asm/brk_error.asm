@@ -25,9 +25,9 @@
 ; Raises a bad command error
 
 .raise_bad_command
-  ldx #(bad_command MOD 256)
-  ldy #(bad_command DIV 256)
-  jmp brk_error
+	ldx #(bad_command MOD 256)
+	ldy #(bad_command DIV 256)
+	jmp brk_error
 
 .bad_command
 	EQUB &FE
@@ -37,9 +37,9 @@
 ; Raises an illegal param error
 
 .raise_illegal_param
-  ldx #(illegal_param MOD 256)
-  ldy #(illegal_param DIV 256)
-  jmp brk_error
+	ldx #(illegal_param MOD 256)
+	ldy #(illegal_param DIV 256)
+	jmp brk_error
 
 .illegal_param
 	EQUB &80

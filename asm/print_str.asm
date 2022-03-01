@@ -26,18 +26,18 @@
 ; A - unchanged
 
 .print_str
-  pha
-  lda gen_ptr_low
-  pha
-  lda gen_ptr_high
-  pha
+	pha
+	lda gen_ptr_low
+	pha
+	lda gen_ptr_high
+	pha
 	stx gen_ptr_low
 	sty gen_ptr_high
 	ldy #0
 	jsr print_str_loop
 	pla
-  sta gen_ptr_high
-  pla
-  sta gen_ptr_low
-  pla
+	sta gen_ptr_high
+	pla
+	sta gen_ptr_low
+	pla
 	rts

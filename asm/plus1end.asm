@@ -1,6 +1,6 @@
 
-  ORG &9FF3
-  EQUS "By Cyberspice"
+	ORG &9FF3
+	EQUS "By Cyberspice"
 
 	ORG &a000
 .end

@@ -57,11 +57,11 @@
 	pla
 	tax             ; Restore X
 	lda help_str_table,x
-  pha             ; Save LOW
+	pha             ; Save LOW
 	lda help_str_table + 1, x
 	tay             ; HIGH in to Y
-  pla             ; Restore LOW
-  tax             ; LOW in to X
+	pla             ; Restore LOW
+	tax             ; LOW in to X
 	jsr print_str
 	pla             ; Throw away Y'
 .help_done
@@ -237,7 +237,7 @@
 	jsr print_rom_str
 	dey                     ; Zero index
 	tya
-  pha                     ; Save ROM number
+	pha                     ; Save ROM number
 	jsr print_hex_digit     ; Print ROM number
 	lda #&20                ; Print a space
 	jsr OSASCI
@@ -291,42 +291,42 @@ ENDIF
 .do_roms_7
 	lda #&0d                ; End of line
 	jsr OSASCI
-  pla                     ; Restore ROM number
-  tay
+	pla                     ; Restore ROM number
+	tay
 	bne do_roms_2           ; Next ROM
 	jmp command_done
 
 .print_rom_str
-  txa
-  pha
-  tya
-  pha
+	txa
+	pha
+	tya
+	pha
 	ldx #(rom_str MOD 256)
 	ldy #(rom_str DIV 256)
-  jsr print_str
-  pla
-  tay
-  pla
-  tax
-  rts
+	jsr print_str
+	pla
+	tay
+	pla
+	tax
+	rts
 
 .rom_str
-  EQUS "ROM "
+	EQUS "ROM "
 	EQUB 0
 
 .print_basic_str
-  txa
-  pha
-  tya
-  pha
+	txa
+	pha
+	tya
+	pha
 	ldx #(basic_str MOD 256)
 	ldy #(basic_str DIV 256)
-  jsr print_str
-  pla
-  tay
-  pla
-  tax
-  rts
+	jsr print_str
+	pla
+	tay
+	pla
+	tax
+	rts
 
 .basic_str
 	EQUS "Basic"
@@ -335,10 +335,10 @@ ENDIF
 ; Jumping off points as further than 128 bytes
 
 .raise_bad_command_j
-  jmp raise_bad_command
+	jmp raise_bad_command
 
 .raise_illegal_param_j
-  jmp raise_illegal_param
+	jmp raise_illegal_param
 
 ; Reads a start and end address from the command line
 ;
@@ -351,45 +351,45 @@ ENDIF
 ;    gen_count - length
 
 .parse_start_and_len
-  jsr skip_whitespace     ; Skip whitespace
-  bcc raise_bad_command_j ; Premature end of line
-  jsr read_hex            ; Read the start address
-  bcs raise_illegal_param_j  ; Overflow - jump to error
-  lda (cmdline),y         ; Test following char is whitespace
-  beq raise_bad_command_j
-  cmp #&20
-  beq parse_start_and_len_2
-  jmp raise_bad_command_j ; Not whitespace so error
+	jsr skip_whitespace     ; Skip whitespace
+	bcc raise_bad_command_j ; Premature end of line
+	jsr read_hex            ; Read the start address
+	bcs raise_illegal_param_j  ; Overflow - jump to error
+	lda (cmdline),y         ; Test following char is whitespace
+	beq raise_bad_command_j
+	cmp #&20
+	beq parse_start_and_len_2
+	jmp raise_bad_command_j ; Not whitespace so error
 .parse_start_and_len_2
-  lda parse_hex_low       ; Store the value in the ROM ptr
-  sta rom_ptr_low
-  lda parse_hex_high
-  sta rom_ptr_high
-  jsr skip_whitespace     ; Skip whitespace
-  bcc raise_bad_command_j ; Premature end of line
-  lda (cmdline),y         ; + means the following value is a length
-  cmp #'+'
-  pha
-  bne parse_start_and_len_3
-  iny                     ; Next char
+	lda parse_hex_low       ; Store the value in the ROM ptr
+	sta rom_ptr_low
+	lda parse_hex_high
+	sta rom_ptr_high
+	jsr skip_whitespace     ; Skip whitespace
+	bcc raise_bad_command_j ; Premature end of line
+	lda (cmdline),y         ; + means the following value is a length
+	cmp #'+'
+	pha
+	bne parse_start_and_len_3
+	iny                     ; Next char
 .parse_start_and_len_3
-  jsr read_hex            ; Read the end address / length
-  bcs raise_illegal_param_j  ; Overflow - jump to error
-  pla
-  cmp #'+'                ; Is it a length?
-  beq parse_start_and_len_4
-  sec                     ; Length is end address - start address
-  lda parse_hex_low
-  sbc rom_ptr_low
-  sta parse_hex_low
-  lda parse_hex_high
-  sbc rom_ptr_high
-  sta parse_hex_high
+	jsr read_hex            ; Read the end address / length
+	bcs raise_illegal_param_j  ; Overflow - jump to error
+	pla
+	cmp #'+'                ; Is it a length?
+	beq parse_start_and_len_4
+	sec                     ; Length is end address - start address
+	lda parse_hex_low
+	sbc rom_ptr_low
+	sta parse_hex_low
+	lda parse_hex_high
+	sbc rom_ptr_high
+	sta parse_hex_high
 .parse_start_and_len_4
-  lda parse_hex_low       ; Store the length
-  sta gen_count_low
-  lda parse_hex_high
-  sta gen_count_high
+	lda parse_hex_low       ; Store the length
+	sta gen_count_low
+	lda parse_hex_high
+	sta gen_count_high
 	rts
 
 ; Do the MDUMP command
@@ -504,9 +504,9 @@ ENDIF
 	lda #&20
 	jsr OSASCI
 	ldx gen_count_low       ; Number of bytes remaining
-  ldy #0
+	ldy #0
 	txa
-  jsr mdump_prt_chars     ; Print the remaining chars
+	jsr mdump_prt_chars     ; Print the remaining chars
 	lda #13
 	jsr OSASCI
 	jmp command_done
@@ -689,8 +689,8 @@ ENDIF
 .build_copy_block_from_sram_3
 	lda select_rom_upper,x
 	sta workspace,y
-  iny
-  inx
+	iny
+	inx
 	cpx #(select_rom_upper_end - select_rom_upper)
 	bne build_copy_block_from_sram_3
 	lda rom_num
@@ -709,9 +709,9 @@ ENDIF
 	lda rom_ptr_high
 	pha
 	lda (cmdline),y
-  cmp #&20
-  beq parse_sr_args_2
-  jmp raise_bad_command
+	cmp #&20
+	beq parse_sr_args_2
+	jmp raise_bad_command
 .parse_sr_args_2
 	jsr skip_whitespace
 	bcs parse_sr_args_3
