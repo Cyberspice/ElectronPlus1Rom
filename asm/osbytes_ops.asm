@@ -8,6 +8,7 @@ ob_force_adc      = &11
 ob_inc_poll_sem   = &16
 ob_dec_poll_sem   = &17
 ob_romstb_rw      = &6e
+os_escape_clear   = &7c
 ob_read_adc       = &80
 ob_current_mode   = &87
 ob_enter_lang     = &8e
