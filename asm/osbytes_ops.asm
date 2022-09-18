@@ -1,4 +1,3 @@
-
 ; OSBYTE operations (Value for A)
 ob_set_input      = &02
 ob_set_rx_bps     = &07
@@ -10,6 +9,7 @@ ob_dec_poll_sem   = &17
 ob_romstb_rw      = &6e
 os_escape_clear   = &7c
 ob_read_adc       = &80
+ob_inkey          = &81
 ob_current_mode   = &87
 ob_enter_lang     = &8e
 ob_set_uart_sts   = &9c

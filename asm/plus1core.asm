@@ -1,6 +1,4 @@
 
-_NO_BUG_ = 0
-
 ; This is a reverse engineering of the Acorn Electron Plus 1 Expansion
 ; utility ROM.
 
@@ -31,11 +29,13 @@ old_insv_ptr_high = &0d6f
 	EQUB 0
 .titlestr
 	EQUS "Electron Expansion"
+; Lots of backspace delete characters to erase the title
 	EQUD &7f7f7f7f
 	EQUD &7f7f7f7f
 	EQUD &7f7f7f7f
 	EQUD &7f7f7f7f
 	EQUW &7f7f
+; Up one line (reverse line feed)
 	EQUW &0b0b
 	EQUB 0
 	EQUS "1.00"
@@ -47,26 +47,43 @@ old_insv_ptr_high = &0d6f
 ; Language entry point
 ;
 ; Since this ROM is not a language but this may be seen first it
-; selects which ROM should be the language and starts it.
+; selects which ROM should be the language and starts it. It
+; completely changes the priority order for the language, looking
+; at ROMS 7 to 0 in descring order and then BASIC. This is because
+; this is higher than the BASIC ROM and cartridge ROMs should take
+; priority over BASIC.
+
+; ROM numbers are:
+;
+; 0,1   - Cartridge 0
+; 2,3   - Cartridge 1
+; 4     - Plus 3 ROM
+; 5-7   - Further expansion
+; 8-9   - Keyboard matrix
+; 10    - BASIC duplicate
+; 11    - BASIC
+; 12    - Plus 1 ROM
+; 13    - Cartridge high priority ROM
+; 14,15 - Further expansion
 
 .lang
 	ldy #ob_var_rom_itable
 	jsr read_os_var
 IF _NO_BUG_
-	stx os_spare_low
-	sty os_spare_high
+	stx p0_spare_low
+	sty p0_spare_high
 ELSE
 	stx &00
 	sty &01
 ENDIF
-	ldx rom_num
+	ldx p0_rom_num
 .lang2
 	lda langtbl,x  ; Next ROM to check
 	bmi lang4
 	tax
 	tay
 IF _NO_BUG_
-	lda (os_spare_low),y     ; Load ROM type byte
+	lda (p0_spare_low),y  ; Load ROM type byte
 ELSE
 	lda (&00),y
 ENDIF
@@ -260,7 +277,7 @@ ENDIF
 	ldx UART_STATUS_A
 	jsr reset_uart_error_a
 	pla
-	ldy #uart_err_event
+	ldy #evt_uart_err
 	jsr OSEVEN
 	jmp done
 
@@ -342,7 +359,7 @@ ENDIF
 	lda ADC
 	sta adc_conv_msb - 1,x
 	stx adc_conv_last
-	ldy #adc_conv_event
+	ldy #evt_adc_conv
 	jsr OSEVEN
 	ldx adc_conv_last
 	dex
@@ -407,10 +424,10 @@ ENDIF
 ; *FX163,128,0 - Enable
 
 .plus1_enable
-	lda osbyte_x
+	lda p0_osbyte_x
 	cmp #&80
 	bne plus1_enable_ret
-	ldx osbyte_y
+	ldx p0_osbyte_y
 	beq printer_adc_enable
 	dex
 	beq printer_adc_disable
@@ -436,7 +453,7 @@ ENDIF
 .plus1_enable_done
 	pla
 	and #1
-	sta osbyte_x
+	sta p0_osbyte_x
 	jmp done
 .plus1_enable_x_2     ; X = 2
 	lda uart_0d68
@@ -457,7 +474,7 @@ ENDIF
 .read_adc_return
 	jmp return
 .read_adc
-	lda osbyte_x
+	lda p0_osbyte_x
 	bne read_adc_return
 	lda ADC_PRT_STATUS
 	pha
@@ -471,7 +488,7 @@ ENDIF
 	lsr a
 	and #3
 	eor #3
-	sta osbyte_x
+	sta p0_osbyte_x
 	jmp done
 
 ; Select an ADC channel
@@ -479,9 +496,9 @@ ENDIF
 ; X is the channel
 
 .select_adc
-	ldx osbyte_x
+	ldx p0_osbyte_x
 	jsr select_adc_chan
-	stx osbyte_x
+	stx p0_osbyte_x
 	jmp done
 
 .select_adc_chan
@@ -504,7 +521,7 @@ ENDIF
 .force_adc
 	lda #0
 	sta adc_conv_last
-	ldx osbyte_x
+	ldx p0_osbyte_x
 	jsr start_adc_conv
 	lda #&20
 	jsr L84f1
@@ -519,17 +536,17 @@ ENDIF
 ; *FX 110, X where X is the latch value
 
 .romstb_rw
-	ldx osbyte_x
+	ldx p0_osbyte_x
 	lda romstb_shad_latch
 	stx romstb_shad_latch
 	stx ROMSTB_LATCH
-	sta osbyte_x
+	sta p0_osbyte_x
 	jmp done
 
 ; Handle the unknown OSBYTE service call
 
 .unknown_osbyte
-	lda osbyte_a
+	lda p0_osbyte_a
 	cmp #ob_read_adc
 	beq read_adc
 	cmp #ob_sel_adc
@@ -559,29 +576,29 @@ ENDIF
 
 .set_uart_rx_rate
 	lda #&f0
-	sta osbyte_y
+	sta p0_osbyte_y
 	jmp set_uart_rate
 .set_uart_tx_rate
 	lda #&0f
-	sta osbyte_y
+	sta p0_osbyte_y
 .set_uart_rate
-	ldx osbyte_x
+	ldx p0_osbyte_x
 	cpx #&0c
 	bcs set_uart_rate_done
-	lda osbyte_y
+	lda p0_osbyte_y
 	eor #&ff
 	and uart_0d69
-	sta osbyte_x
+	sta p0_osbyte_x
 	lda bps_rate_tbl,x
-	and osbyte_y
-	ora osbyte_x
+	and p0_osbyte_y
+	ora p0_osbyte_x
 	sta uart_0d69
 	sta UART_CLOCK_A
 .set_uart_rate_done
 	jmp done
 
 .set_input_stream
-	lda osbyte_x
+	lda p0_osbyte_x
 	pha
 	and #1
 	tax
@@ -607,11 +624,11 @@ ENDIF
 
 .set_uart_status
 	lda #&e3
-	cmp osbyte_y
+	cmp p0_osbyte_y
 	bne L83f7
-	bit osbyte_x
+	bit p0_osbyte_x
 	bne set_uart_status_done
-	lda osbyte_x
+	lda p0_osbyte_x
 	lsr a
 	lsr a
 	nop  ; ???
@@ -619,11 +636,11 @@ ENDIF
 	jsr reset_uart_mr_a
 	lda UART_MODE_A
 	and #&e0
-	sta osbyte_y
+	sta p0_osbyte_y
 	jsr reset_uart_mr_a
 	lda uart_status_tbl,x
 	and #&1f
-	ora osbyte_y
+	ora p0_osbyte_y
 	sta UART_MODE_A
 	lda UART_MODE_A
 	and #&f0
@@ -652,11 +669,11 @@ ENDIF
 
 .L83f7
 	lda #&9f
-	cmp osbyte_y
+	cmp p0_osbyte_y
 	bne set_uart_status_done
-	bit osbyte_x
+	bit p0_osbyte_x
 	bne set_uart_status_done
-	lda osbyte_x
+	lda p0_osbyte_x
 	cmp #&60
 	beq L840f
 	lda #&70
@@ -691,7 +708,7 @@ ENDIF
 	EQUB &83
 	EQUB &87
 
-IF _ENHANCED_ = 0
+IF NOT(_ENHANCED_)
 .help
 	tya
 	pha
@@ -837,19 +854,19 @@ ENDIF
 	lda #1
 	bit uart_0d68
 	bne handle_brk_2
-	lda osbyte_a
+	lda p0_osbyte_a
 	pha
-	lda osbyte_x
+	lda p0_osbyte_x
 	pha
-	lda osbyte_y
+	lda p0_osbyte_y
 	pha
 	jsr start_100hz_processing
 	pla
-	sta osbyte_y
+	sta p0_osbyte_y
 	pla
-	sta osbyte_x
+	sta p0_osbyte_x
 	pla
-	sta osbyte_a
+	sta p0_osbyte_a
 .handle_brk_2
 	jmp return
 
@@ -902,9 +919,9 @@ ENDIF
 	lda #oa_get_fs_number
 	tay
 	jsr OSARGS
-	cmp #file_system_rom
+	cmp #fs_number_rom
 	bcs vectors_claimed_ret
-	cmp #file_system_none
+	cmp #fs_number_none
 	beq vectors_claimed_ret
 	lda FILEV
 	sta old_insv_ptr_low
@@ -916,28 +933,28 @@ ENDIF
 	jsr read_os_var
 	php
 	sei
-	lda brk_addr_low
+	lda p0_brk_addr_low
 	pha
-	lda brk_addr_high
+	lda p0_brk_addr_high
 	pha
-	stx brk_addr_low
-	sty brk_addr_high
+	stx p0_brk_addr_low
+	sty p0_brk_addr_high
 	ldy #&1b
 	sty FILEV
 	lda #&ff
 	sta FILEV + 1
 	lda #(guarded_call_old_insv MOD 256)
-	sta (brk_addr_low),y
+	sta (p0_brk_addr_low),y
 	iny
 	lda #(guarded_call_old_insv DIV 256)
-	sta (brk_addr_low),y
+	sta (p0_brk_addr_low),y
 	iny
-	lda rom_num
-	sta (brk_addr_low),y
+	lda p0_rom_num
+	sta (p0_brk_addr_low),y
 	pla
-	sta brk_addr_high
+	sta p0_brk_addr_high
 	pla
-	sta brk_addr_low
+	sta p0_brk_addr_low
 	plp
 .vectors_claimed_ret
 	jmp return
@@ -968,29 +985,29 @@ ENDIF
 .read_os_var
 	clc
 .rw_os_var_2
-	lda brk_addr_low     ; Save the BRK address on the stack
+	lda p0_brk_addr_low     ; Save the BRK address on the stack
 	pha
-	lda brk_addr_high
+	lda p0_brk_addr_high
 	pha
 	lda os_var_start_low
-	sta brk_addr_low
+	sta p0_brk_addr_low
 	lda os_var_start_high
-	sta brk_addr_high
+	sta p0_brk_addr_high
 	bcc rw_os_var_3
 	txa                  ; Write X in to the var address
-	sta (brk_addr_low),y
+	sta (p0_brk_addr_low),y
 	bcs rw_os_var_4
 .rw_os_var_3                 ; Read two bytes from var address in to X and Y
-	lda (brk_addr_low),y
+	lda (p0_brk_addr_low),y
 	tax
 	iny
-	lda (brk_addr_low),y
+	lda (p0_brk_addr_low),y
 	tay
 .rw_os_var_4
 	pla                   ; Restore the BRK address
-	sta brk_addr_high
+	sta p0_brk_addr_high
 	pla
-	sta brk_addr_low
+	sta p0_brk_addr_low
 	rts
 
 ; Divide RS423 error event by 2

@@ -1,10 +1,13 @@
 
 ; OS routines
+OSWRSC            = &FFB6
 OSRDRM            = &FFB9
+OSRDSC            = &FFB9
 OSEVEN            = &FFBF
 OSARGS            = &FFDA
 OSASCI            = &FFE3
 OSWRCH            = &FFEE
+OSWORD            = &FFF1
 OSBYTE            = &FFF4
 
 ; Stack
@@ -23,12 +26,12 @@ adc_conv_lsb      = &02f8
 adc_conv_msb      = &02fc
 
 ; Event numbers
-adc_conv_event    = 3
-uart_err_event    = 7
+evt_adc_conv    = 3
+evt_uart_err    = 7
 
 ; File system numbers
-file_system_none  = 0
-file_system_rom   = 3
+fs_number_none  = 0
+fs_number_rom   = 3
 
 ; OSARGS operations (Value for A)
 oa_get_fs_number   = 0
